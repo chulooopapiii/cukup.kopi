@@ -1,0 +1,11 @@
+{
+  "appId": "id.cukupkopi.app",
+  "appName": "Cukup Kopi",
+  "webDir": "www",
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#0F7A5F"
+    }
+  }
+}

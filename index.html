@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d9b894">
+<title>Cukup Kopi</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--bg:#d9b894;--surf:#ebd5b9;--ink:#3a2112;--mute:#5e4330;--line:#c29d78;--ok:#2b6448;--warn:#855000;--bad:#a3301d;--btn:#5a3520;--btnt:#f6e9d6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Figtree,system-ui,sans-serif}
+main{max-width:480px;margin:0 auto;padding:20px 16px 48px}
+h1{font:800 28px/1.1 "Bricolage Grotesque",sans-serif;margin:0 0 4px;letter-spacing:-.02em}
+h2{font:700 18px/1.2 "Bricolage Grotesque",sans-serif;margin:0 0 12px}
+.sub{color:var(--mute);margin:0;font-size:14px}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.logo{width:60px;height:60px;flex:none;border-radius:16px;box-shadow:0 2px 10px rgba(36,19,12,.28)}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(74,44,29,.08)}
+.gauge{display:flex;align-items:center;gap:18px}
+.cup{width:96px;height:120px;flex:none}
+.big{font:800 40px/1 "Bricolage Grotesque",sans-serif}
+.big small{font:500 15px Figtree;color:var(--mute)}
+.msg{margin-top:6px;font-weight:600}
+.alert{border-radius:12px;padding:12px 14px;margin-bottom:14px;font-weight:600;font-size:15px;border:1.5px solid}
+.alert.warn{color:var(--warn);border-color:var(--warn)}
+.alert.bad{color:var(--bad);border-color:var(--bad)}
+.alert.ok{color:var(--ok);border-color:var(--ok)}
+label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
+select,input[type=time],input[type=text],input[type=number]{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:500 16px Figtree}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.info{font-size:14px;color:var(--mute);margin:10px 0 0;min-height:21px}
+button{font:600 16px Figtree;border:0;border-radius:10px;padding:13px 16px;background:var(--btn);color:var(--btnt);width:100%;margin-top:14px;cursor:pointer}
+button.ghost{background:transparent;color:var(--mute);border:1px solid var(--line);width:auto;margin:0;padding:6px 10px;font-size:13px}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--ok);outline-offset:2px}
+ul{list-style:none;margin:0;padding:0}
+li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+li:first-child{border-top:0}
+li b{display:block;font-weight:600}li span{font-size:13px;color:var(--mute)}
+.empty{color:var(--mute);font-size:14px}
+.sg{margin-top:10px;font-size:14px;font-weight:600}
+.bar{height:8px;border-radius:6px;background:var(--line);margin-top:4px;overflow:hidden}.bar i{display:block;height:100%;width:0}
+.note{font-size:12.5px;color:var(--mute);line-height:1.45}
+</style>
+</head>
+<body>
+<main>
+<header class="brand"><svg class="logo" viewBox="0 0 512 512" role="img" aria-label="Logo Cukup Kopi">
+<defs><linearGradient id="lbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4A2C1D"/><stop offset="1" stop-color="#24130C"/></linearGradient></defs>
+<rect width="512" height="512" rx="112" fill="url(#lbg)"/>
+<circle cx="256" cy="256" r="196" fill="none" stroke="#B98A5B" stroke-opacity=".35" stroke-width="3"/>
+<g fill="none" stroke="#D4B18A" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+<path d="M150 214h188v66c0 50-38 88-94 88s-94-38-94-88z"/><path d="M338 234h22c28 0 40 18 40 36s-12 36-40 36h-28"/><path d="M126 392h236"/>
+<path d="M214 178c-14-16 14-30 0-48M262 178c-14-16 14-30 0-48" stroke-width="11"/></g>
+<path d="M162 270h164v10c0 42-32 74-82 74s-82-32-82-74z" fill="#B98A5B" fill-opacity=".9"/>
+<path d="M162 270c27-10 54 10 82 0s55-10 82 0" fill="none" stroke="#F1E3D0" stroke-width="7" stroke-linecap="round"/></svg><div><h1>Cukup Kopi</h1>
+<p class="sub">Catat kopi dari coffee shop favoritmu dan lihat kapan sudah cukup.</p></div></header>
+
+<div id="alert"></div>
+
+<section class="card gauge" aria-live="polite">
+<svg class="cup" viewBox="0 0 96 120" role="img" aria-label="Isi cangkir menunjukkan kafein hari ini">
+<defs><clipPath id="cl"><path d="M12 20h60l-6 84a8 8 0 0 1-8 7H26a8 8 0 0 1-8-7z"/></clipPath></defs>
+<rect x="0" y="0" width="96" height="120" fill="none"/>
+<g clip-path="url(#cl)"><rect x="0" y="0" width="96" height="120" fill="var(--line)"/><rect id="fill" x="0" y="111" width="96" height="0" fill="var(--ok)"/></g>
+<path d="M12 20h60l-6 84a8 8 0 0 1-8 7H26a8 8 0 0 1-8-7z" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+<path d="M72 36h8a10 10 0 0 1 0 38h-10" fill="none" stroke="var(--ink)" stroke-width="3"/>
+</svg>
+<div>
+<div class="big"><span id="total">0</span> <small>/ <span id="lim">400</span> mg</small></div>
+<div class="msg" id="status"></div>
+<div class="note" id="count"></div>
+<div class="sg"><span id="sgline"></span><div class="bar"><i id="sgbar"></i></div></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Tambah minuman</h2>
+<label for="shop">Coffee shop</label>
+<select id="shop"></select>
+<label for="drink">Minuman</label>
+<select id="drink"></select>
+<label for="size">Ukuran</label>
+<select id="size">
+<option value="1">Regular</option>
+<option value="1.3">Large (± 30% lebih banyak)</option>
+<option value="0.6">Kecil / setengah porsi</option>
+</select>
+<label for="qty">Jumlah gelas</label>
+<select id="qty"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+<div id="sugarwrap"><label for="sugar">Gula</label>
+<select id="sugar"><option value="0">Tanpa gula (0 g)</option><option value="8">Sedikit (± 8 g)</option><option value="15" selected>Normal (± 15 g)</option><option value="25">Manis (± 25 g)</option></select></div>
+<p class="info" id="info"></p>
+<button class="ghost" id="goCustom" style="margin-top:12px">Coffee shop atau menu tidak ada? Tambah sendiri</button>
+<button id="add">Catat minuman ini</button>
+</section>
+
+<section class="card" id="custom">
+<h2>Menu buatanmu</h2>
+<label for="csh">Coffee shop</label>
+<select id="csh"></select>
+<input type="text" id="cshn" maxlength="30" placeholder="Nama coffee shop kamu" hidden style="margin-top:8px">
+<label for="cn">Nama minuman</label>
+<input type="text" id="cn" maxlength="40" placeholder="Contoh: Kopi susu warung">
+<div class="row"><div><label for="cs">Shot espresso</label><input type="number" id="cs" min="0" max="10" step="0.5" inputmode="decimal"></div><div><label for="cm">atau kafein (mg)</label><input type="number" id="cm" min="0" max="800" inputmode="numeric"></div></div>
+<label for="cg">Gula (gram)</label>
+<input type="number" id="cg" min="0" max="200" inputmode="decimal" placeholder="0">
+<p class="info">1 shot espresso ± 65 mg kafein. 1 sendok teh gula ± 4 g, 1 sachet gula ± 5–10 g. Jika kafein (mg) diisi, jumlah shot diabaikan.</p>
+<button id="saveMine">Simpan ke Menu Saya</button>
+<p class="info" id="cerr" role="status"></p>
+<ul id="mine"></ul>
+</section>
+
+<section class="card">
+<h2>Hari ini</h2>
+<ul id="log"></ul>
+<p class="empty" id="empty">Belum ada kopi tercatat hari ini.</p>
+</section>
+
+<section class="card">
+<h2>Pengaturan</h2>
+<label for="limit">Batas kafein harian</label>
+<select id="limit">
+<option value="400">400 mg: dewasa sehat (acuan umum)</option>
+<option value="300">300 mg: lebih hati-hati</option>
+<option value="200">200 mg: hamil / menyusui</option>
+<option value="150">150 mg: sangat ketat</option>
+</select>
+<label for="cut">Jangan minum kopi setelah jam</label>
+<input type="time" id="cut" value="15:00">
+<label for="slimit">Batas gula harian</label>
+<select id="slimit"><option value="50">50 g: acuan Kemenkes (± 4 sendok makan)</option><option value="25">25 g: acuan WHO yang ideal</option></select>
+<button class="ghost" id="reset" style="margin-top:14px">Hapus catatan hari ini</button>
+</section>
+
+<p class="note">Kadar kafein dan gula adalah perkiraan berdasarkan jumlah shot espresso (± 65–75 mg per shot) dan ukuran standar. Kebanyakan coffee shop di Indonesia tidak mempublikasikan angka pastinya, jadi hasil bisa berbeda. Untuk kondisi kesehatan tertentu, ikuti saran dokter.</p>
+</main>
+
+<script>
+// k = mg kafein perkiraan per porsi regular, s = jumlah shot, c = komposisi
+const SHOPS={
+"Starbucks":[
+{n:"Caffè Americano",k:150,s:2,c:"Espresso 2 shot, air"},
+{n:"Caffè Latte",k:75,s:1,c:"Espresso 1 shot, susu steam"},
+{n:"Cappuccino",k:75,s:1,c:"Espresso 1 shot, susu, foam tebal"},
+{n:"Caramel Macchiato",k:75,s:1,c:"Espresso, susu, vanila, saus karamel"},
+{n:"Cold Brew",k:155,s:0,c:"Kopi seduh dingin, es"},
+{n:"Java Chip Frappuccino",k:70,s:0,c:"Kopi, cokelat chip, susu, es, krim"}],
+"Kopi Kenangan":[
+{n:"Kopi Kenangan Mantan",k:130,s:2,c:"Espresso, susu, gula aren, es"},
+{n:"Americano",k:130,s:2,c:"Espresso, air, es"},
+{n:"Cafe Latte",k:130,s:2,c:"Espresso, susu"},
+{n:"Kenangan Hati (Caramel)",k:130,s:2,c:"Espresso, susu, karamel"},
+{n:"Kopi Hitam Gula Aren",k:130,s:2,c:"Espresso, air, gula aren"}],
+"Janji Jiwa":[
+{n:"Es Kopi Susu Janji Jiwa",k:130,s:2,c:"Espresso, susu, gula"},
+{n:"Kopi Susu Aren",k:130,s:2,c:"Espresso, susu, gula aren"},
+{n:"Americano",k:130,s:2,c:"Espresso, air"},
+{n:"Cappuccino",k:130,s:2,c:"Espresso, susu, foam"},
+{n:"Caramel Latte",k:130,s:2,c:"Espresso, susu, karamel"}],
+"Fore Coffee":[
+{n:"Aren Latte",k:130,s:2,c:"Espresso, susu, gula aren"},
+{n:"Butterscotch Latte",k:130,s:2,c:"Espresso, susu, sirup butterscotch"},
+{n:"Americano",k:130,s:2,c:"Espresso, air"},
+{n:"Coffee Latte",k:130,s:2,c:"Espresso, susu"},
+{n:"Cold Brew",k:150,s:0,c:"Kopi seduh dingin"}],
+"Tomoro Coffee":[
+{n:"Coconut Latte",k:130,s:2,c:"Espresso, susu, kelapa"},
+{n:"Aren Latte",k:130,s:2,c:"Espresso, susu, gula aren"},
+{n:"Americano",k:130,s:2,c:"Espresso, air"},
+{n:"Cappuccino",k:130,s:2,c:"Espresso, susu, foam"}]
+};
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toLocaleDateString("sv");
+let S={limit:400,cut:"15:00",slimit:50,custom:[],day:today(),log:[]};
+try{const r=localStorage.getItem("cukupkopi");if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+if(S.day!==today()){S.day=today();S.log=[]}
+const save=()=>{try{localStorage.setItem("cukupkopi",JSON.stringify(S))}catch(e){}};
+
+const MY="Menu Saya";
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const cshop=c=>c.shop||MY;
+const shops=()=>{const x=Object.keys(SHOPS);S.custom.forEach(c=>{if(!x.includes(cshop(c)))x.push(cshop(c))});return x};
+const list=sh=>(SHOPS[sh]||[]).concat(S.custom.filter(c=>cshop(c)===sh).map(c=>({n:c.n,k:c.k,g:c.g,custom:1,c:c.k+" mg kafein, "+c.g+" g gula (menu buatanmu)"})));
+function fillShops(sel){$("shop").innerHTML=shops().map(s=>`<option>${esc(s)}</option>`).join("");if(sel)$("shop").value=sel}
+function fillDrinks(sel){
+ $("drink").innerHTML=list($("shop").value).map((d,i)=>`<option value="${i}">${esc(d.n)}${d.custom?" (menu sendiri)":""}</option>`).join("");
+ if(sel!==undefined)$("drink").value=sel;
+ showInfo();
+}
+function cur(){return list($("shop").value)[+$("drink").value]}
+const mult=()=>parseFloat($("size").value)*(+$("qty").value);
+function mg(){return Math.round(cur().k*mult())}
+function sg(){const d=cur();return Math.round((d.custom?d.g:+$("sugar").value)*mult())}
+function showInfo(){
+ const d=cur();$("sugarwrap").style.display=d.custom?"none":"block";
+ $("info").textContent=`${d.c}. Total ${mg()} mg kafein, ${sg()} g gula.`;
+}
+function renderCustom(){
+ $("mine").innerHTML=S.custom.map((c,i)=>`<li><div><b>${esc(c.n)}</b><span>${esc(cshop(c))} · ${c.k} mg · ${c.g} g gula</span></div><button class="ghost" data-c="${i}" aria-label="Hapus menu ${esc(c.n)}">Hapus</button></li>`).join("");
+}
+function sugarUI(){
+ const t=S.log.reduce((a,b)=>a+(b.sg||0),0),L=S.slimit;
+ const col=t>L?"var(--bad)":t>=L*.75?"var(--warn)":"var(--ok)";
+ $("sgline").textContent=`Gula: ${t} / ${L} g`;
+ $("sgbar").style.width=Math.min(t/L*100,100)+"%";$("sgbar").style.background=col;
+ return t>L?`<div class="alert bad">Gula hari ini ${t} g, melewati batas ${L} g. Pilih minuman tanpa atau sedikit gula untuk berikutnya.</div>`:t>=L*.75?`<div class="alert warn">Gula tinggal ${L-t} g lagi sampai batas harian.</div>`:"";
+}
+$("saveMine").onclick=()=>{
+ const n=$("cn").value.trim().slice(0,40),e=$("cerr");
+ if(!n){e.textContent="Isi nama minuman dulu.";return}
+ let shop=$("csh").value;if(shop==="__new")shop=$("cshn").value.trim().slice(0,30);
+ if(!shop){e.textContent="Isi nama coffee shop dulu.";return}
+ if($("cs").value===""&&$("cm").value===""){e.textContent="Isi jumlah shot atau kadar kafein (mg).";return}
+ const sh=parseFloat($("cs").value)||0,m=parseFloat($("cm").value)||0,g=parseFloat($("cg").value)||0;
+ const k=Math.min(Math.round($("cm").value!==""?m:sh*65),1000);
+ S.custom.push({n,shop,k:Math.max(k,0),g:Math.min(Math.max(Math.round(g),0),200)});
+ save();["cn","cshn","cs","cm","cg"].forEach(i=>$(i).value="");
+ fillShops(shop);fillDrinks(list(shop).length-1);fillCsh(shop);renderCustom();
+ e.textContent=`Tersimpan di ${shop} dan sudah dipilih di atas.`;
+};
+$("mine").onclick=e=>{
+ const i=e.target.dataset.c;if(i===undefined)return;
+ S.custom.splice(+i,1);save();
+ const sh=$("shop").value;fillShops(shops().includes(sh)?sh:undefined);fillDrinks();fillCsh();renderCustom();
+};
+function fillCsh(sel){
+ const v=sel||$("csh").value;
+ $("csh").innerHTML=shops().map(s=>`<option>${esc(s)}</option>`).join("")+'<option value="__new">+ Coffee shop lain…</option>';
+ $("csh").value=[...$("csh").options].some(o=>o.value===v)?v:$("shop").value;
+ $("cshn").hidden=$("csh").value!=="__new";
+}
+$("csh").onchange=()=>{$("cshn").hidden=$("csh").value!=="__new";if(!$("cshn").hidden)$("cshn").focus()};
+$("goCustom").onclick=()=>{fillCsh();$("custom").scrollIntoView({behavior:"smooth"});$("cn").focus({preventScroll:true})};
+$("sugar").onchange=showInfo;$("qty").onchange=showInfo;
+$("slimit").onchange=e=>{S.slimit=+e.target.value;save();render()};
+function total(){return S.log.reduce((a,b)=>a+b.mg,0)}
+const LN=()=>window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications;
+async function askPerm(){
+ try{const l=LN();if(l){await l.requestPermissions();return}
+ if("Notification" in window&&Notification.permission==="default")Notification.requestPermission()}catch(e){}
+}
+async function notify(t){
+ try{const l=LN();
+ if(l){await l.schedule({notifications:[{id:Date.now()%2147483647,title:"Cukup Kopi",body:t,schedule:{at:new Date(Date.now()+500)}}]});return}
+ if("Notification" in window&&Notification.permission==="granted")new Notification("Cukup Kopi",{body:t})}catch(e){}
+}
+async function scheduleDaily(){
+ try{const l=LN();if(!l)return;
+ const [h,m]=S.cut.split(":").map(Number);
+ await l.cancel({notifications:[{id:1}]});
+ await l.schedule({notifications:[{id:1,title:"Cukup Kopi",body:"Sudah lewat jam "+S.cut+". Hindari kopi agar tidur nyenyak.",schedule:{on:{hour:h,minute:m},allowWhileIdle:true}}]});
+ }catch(e){}
+}
+function render(){
+ const t=total(),L=S.limit,p=Math.min(t/L,1);
+ $("total").textContent=t;$("lim").textContent=L;
+ const f=$("fill");f.setAttribute("height",Math.round(p*96));f.setAttribute("y",111-Math.round(p*96));
+ const col=t>L?"var(--bad)":t>=L*.75?"var(--warn)":"var(--ok)";
+ f.setAttribute("fill",col);
+ const st=$("status");st.style.color=col;
+ st.textContent=t>L?"Sudah melewati batas":t>=L*.75?"Hampir batas":t===0?"Belum minum kopi":"Masih aman";
+ $("count").textContent=S.log.length?`${S.log.length} minuman · sisa ${Math.max(L-t,0)} mg`:"";
+ const now=new Date(),[h,m]=S.cut.split(":").map(Number);
+ const late=now.getHours()*60+now.getMinutes()>=h*60+m;
+ let a="";
+ if(t>L)a=`<div class="alert bad">Kafein hari ini ${t} mg, melewati batas ${L} mg. Hentikan kopi dulu, minum air putih, dan hindari tambahan sampai besok.</div>`;
+ else if(t>=L*.75)a=`<div class="alert warn">Tinggal ${L-t} mg lagi sampai batas. Satu minuman lagi bisa membuatmu melewatinya.</div>`;
+ else if(late&&t>0)a=`<div class="alert warn">Sudah lewat jam ${S.cut}. Kopi sekarang bisa mengganggu tidur malam.</div>`;
+ $("alert").innerHTML=a+sugarUI();
+ $("log").innerHTML=S.log.map((e,i)=>`<li><div><b>${esc(e.n)}</b><span>${esc(e.shop)} · ${e.time} · ${e.mg} mg · ${e.sg||0} g gula</span></div><button class="ghost" data-i="${i}" aria-label="Hapus ${esc(e.n)}">Hapus</button></li>`).join("");
+ $("empty").style.display=S.log.length?"none":"block";
+}
+$("shop").onchange=()=>{fillDrinks();$("csh").value=$("shop").value;$("cshn").hidden=true};
+$("drink").onchange=showInfo;
+$("size").onchange=showInfo;
+$("add").onclick=()=>{
+ askPerm();
+ const d=cur(),before=total();
+ S.log.push({shop:$("shop").value,n:d.n+(+$("qty").value>1?" ×"+$("qty").value:""),mg:mg(),sg:sg(),time:new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})});
+ save();render();
+ const t=total();
+ if(t>S.limit&&before<=S.limit)notify(`Kafein hari ini ${t} mg, melewati batas ${S.limit} mg.`);
+ else if(t>=S.limit*.75&&before<S.limit*.75)notify(`Kafein hari ini ${t} mg, hampir mencapai batas.`);
+};
+$("log").onclick=e=>{const i=e.target.dataset.i;if(i!==undefined){S.log.splice(+i,1);save();render()}};
+$("limit").onchange=e=>{S.limit=+e.target.value;save();render()};
+$("cut").onchange=e=>{S.cut=e.target.value||"15:00";save();render();scheduleDaily()};
+$("reset").onclick=()=>{S.log=[];save();render()};
+$("limit").value=S.limit;$("cut").value=S.cut;$("slimit").value=S.slimit;
+fillShops();fillDrinks();fillCsh();renderCustom();render();askPerm().then(scheduleDaily);
+</script>
+</body>
+</html>
