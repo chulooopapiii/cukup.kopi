@@ -40,6 +40,11 @@ li b{display:block;font-weight:600}li span{font-size:13px;color:var(--mute)}
 .empty{color:var(--mute);font-size:14px}
 .sg{margin-top:10px;font-size:14px;font-weight:600}
 .bar{height:8px;border-radius:6px;background:var(--line);margin-top:4px;overflow:hidden}.bar i{display:block;height:100%;width:0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.st{background:var(--bg);border-radius:10px;padding:10px}.st b{display:block;font:800 19px/1.15 "Bricolage Grotesque",sans-serif}.st span{font-size:12.5px;color:var(--mute)}
+.ch{display:flex;align-items:flex-end;gap:2px;height:80px;margin-top:16px;position:relative;border-bottom:1px solid var(--line)}
+.ch i{flex:1;background:var(--ok);border-radius:2px 2px 0 0;min-height:0}.ch i.o{background:var(--bad)}
+.ln{position:absolute;left:0;right:0;border-top:1px dashed var(--mute)}
 .note{font-size:12.5px;color:var(--mute);line-height:1.45}
 </style>
 </head>
@@ -71,6 +76,7 @@ li b{display:block;font-weight:600}li span{font-size:13px;color:var(--mute)}
 <div class="msg" id="status"></div>
 <div class="note" id="count"></div>
 <div class="sg"><span id="sgline"></span><div class="bar"><i id="sgbar"></i></div></div>
+<div class="note" id="costline" style="margin-top:6px"></div>
 </div>
 </section>
 
@@ -90,6 +96,8 @@ li b{display:block;font-weight:600}li span{font-size:13px;color:var(--mute)}
 <select id="qty"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
 <div id="sugarwrap"><label for="sugar">Gula</label>
 <select id="sugar"><option value="0">Tanpa gula (0 g)</option><option value="8">Sedikit (± 8 g)</option><option value="15" selected>Normal (± 15 g)</option><option value="25">Manis (± 25 g)</option></select></div>
+<label for="price">Harga per gelas (Rp)</label>
+<input type="number" id="price" min="0" step="500" inputmode="numeric" placeholder="Isi sendiri, contoh 22000">
 <p class="info" id="info"></p>
 <button class="ghost" id="goCustom" style="margin-top:12px">Coffee shop atau menu tidak ada? Tambah sendiri</button>
 <button id="add">Catat minuman ini</button>
@@ -105,8 +113,11 @@ li b{display:block;font-weight:600}li span{font-size:13px;color:var(--mute)}
 <div class="row"><div><label for="cs">Shot espresso</label><input type="number" id="cs" min="0" max="10" step="0.5" inputmode="decimal"></div><div><label for="cm">atau kafein (mg)</label><input type="number" id="cm" min="0" max="800" inputmode="numeric"></div></div>
 <label for="cg">Gula (gram)</label>
 <input type="number" id="cg" min="0" max="200" inputmode="decimal" placeholder="0">
+<label for="cp">Harga (Rp), boleh dikosongkan</label>
+<input type="number" id="cp" min="0" step="500" inputmode="numeric" placeholder="Contoh: 22000">
 <p class="info">1 shot espresso ± 65 mg kafein. 1 sendok teh gula ± 4 g, 1 sachet gula ± 5–10 g. Jika kafein (mg) diisi, jumlah shot diabaikan.</p>
-<button id="saveMine">Simpan ke Menu Saya</button>
+<button id="saveLog">Simpan dan catat sekarang</button>
+<button id="saveMine" class="ghost" style="width:100%;margin-top:10px;padding:12px">Simpan ke Menu Saya saja</button>
 <p class="info" id="cerr" role="status"></p>
 <ul id="mine"></ul>
 </section>
@@ -115,6 +126,13 @@ li b{display:block;font-weight:600}li span{font-size:13px;color:var(--mute)}
 <h2>Hari ini</h2>
 <ul id="log"></ul>
 <p class="empty" id="empty">Belum ada kopi tercatat hari ini.</p>
+</section>
+
+<section class="card" id="recap">
+<h2>Rekap bulanan</h2>
+<label for="mon">Bulan</label>
+<select id="mon"></select>
+<div id="rc"></div>
 </section>
 
 <section class="card">
@@ -172,21 +190,21 @@ const SHOPS={
 };
 const $=id=>document.getElementById(id);
 const today=()=>new Date().toLocaleDateString("sv");
-let S={limit:400,cut:"15:00",slimit:50,custom:[],day:today(),log:[]};
+let S={limit:400,cut:"15:00",slimit:50,custom:[],hist:[],prices:{},day:today(),log:[]};
 try{const r=localStorage.getItem("cukupkopi");if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
-if(S.day!==today()){S.day=today();S.log=[]}
+if(S.day!==today()){S.hist=(S.hist||[]).concat(S.log.map(e=>Object.assign({d:S.day},e)));S.day=today();S.log=[]}
 const save=()=>{try{localStorage.setItem("cukupkopi",JSON.stringify(S))}catch(e){}};
 
 const MY="Menu Saya";
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const cshop=c=>c.shop||MY;
 const shops=()=>{const x=Object.keys(SHOPS);S.custom.forEach(c=>{if(!x.includes(cshop(c)))x.push(cshop(c))});return x};
-const list=sh=>(SHOPS[sh]||[]).concat(S.custom.filter(c=>cshop(c)===sh).map(c=>({n:c.n,k:c.k,g:c.g,custom:1,c:c.k+" mg kafein, "+c.g+" g gula (menu buatanmu)"})));
+const list=sh=>(SHOPS[sh]||[]).concat(S.custom.filter(c=>cshop(c)===sh).map(c=>({n:c.n,k:c.k,g:c.g,p:c.p,custom:1,c:c.k+" mg kafein, "+c.g+" g gula (menu buatanmu)"})));
 function fillShops(sel){$("shop").innerHTML=shops().map(s=>`<option>${esc(s)}</option>`).join("");if(sel)$("shop").value=sel}
 function fillDrinks(sel){
  $("drink").innerHTML=list($("shop").value).map((d,i)=>`<option value="${i}">${esc(d.n)}${d.custom?" (menu sendiri)":""}</option>`).join("");
  if(sel!==undefined)$("drink").value=sel;
- showInfo();
+ showInfo();fillPrice();
 }
 function cur(){return list($("shop").value)[+$("drink").value]}
 const mult=()=>parseFloat($("size").value)*(+$("qty").value);
@@ -197,28 +215,31 @@ function showInfo(){
  $("info").textContent=`${d.c}. Total ${mg()} mg kafein, ${sg()} g gula.`;
 }
 function renderCustom(){
- $("mine").innerHTML=S.custom.map((c,i)=>`<li><div><b>${esc(c.n)}</b><span>${esc(cshop(c))} · ${c.k} mg · ${c.g} g gula</span></div><button class="ghost" data-c="${i}" aria-label="Hapus menu ${esc(c.n)}">Hapus</button></li>`).join("");
+ $("mine").innerHTML=S.custom.map((c,i)=>`<li><div><b>${esc(c.n)}</b><span>${esc(cshop(c))} · ${c.k} mg · ${c.g} g gula${c.p?" · "+rp(c.p):""}</span></div><button class="ghost" data-c="${i}" aria-label="Hapus menu ${esc(c.n)}">Hapus</button></li>`).join("");
 }
 function sugarUI(){
  const t=S.log.reduce((a,b)=>a+(b.sg||0),0),L=S.slimit;
  const col=t>L?"var(--bad)":t>=L*.75?"var(--warn)":"var(--ok)";
- $("sgline").textContent=`Gula: ${t} / ${L} g`;
+ $("sgline").textContent=`Gula: ${t} / ${L} g`;$("costline").textContent="Biaya hari ini: "+rp(S.log.reduce((a,b)=>a+(b.p||0),0));
  $("sgbar").style.width=Math.min(t/L*100,100)+"%";$("sgbar").style.background=col;
  return t>L?`<div class="alert bad">Gula hari ini ${t} g, melewati batas ${L} g. Pilih minuman tanpa atau sedikit gula untuk berikutnya.</div>`:t>=L*.75?`<div class="alert warn">Gula tinggal ${L-t} g lagi sampai batas harian.</div>`:"";
 }
-$("saveMine").onclick=()=>{
- const n=$("cn").value.trim().slice(0,40),e=$("cerr");
+function saveMine(logIt){
+ const n=$("cn").value.trim().slice(0,40),e=$("cerr");e.textContent="";
  if(!n){e.textContent="Isi nama minuman dulu.";return}
  let shop=$("csh").value;if(shop==="__new")shop=$("cshn").value.trim().slice(0,30);
  if(!shop){e.textContent="Isi nama coffee shop dulu.";return}
  if($("cs").value===""&&$("cm").value===""){e.textContent="Isi jumlah shot atau kadar kafein (mg).";return}
  const sh=parseFloat($("cs").value)||0,m=parseFloat($("cm").value)||0,g=parseFloat($("cg").value)||0;
  const k=Math.min(Math.round($("cm").value!==""?m:sh*65),1000);
- S.custom.push({n,shop,k:Math.max(k,0),g:Math.min(Math.max(Math.round(g),0),200)});
- save();["cn","cshn","cs","cm","cg"].forEach(i=>$(i).value="");
+ S.custom.push({n,shop,p:Math.max(parseFloat($("cp").value)||0,0),k:Math.max(k,0),g:Math.min(Math.max(Math.round(g),0),200)});
+ save();["cn","cshn","cs","cm","cg","cp"].forEach(i=>$(i).value="");
  fillShops(shop);fillDrinks(list(shop).length-1);fillCsh(shop);renderCustom();
- e.textContent=`Tersimpan di ${shop} dan sudah dipilih di atas.`;
-};
+ e.textContent=logIt?`Tersimpan di ${shop} dan sudah dicatat ke Hari ini.`:`Tersimpan di ${shop}. Ketuk "Catat minuman ini" di atas untuk menambahkannya ke Hari ini.`;
+ if(logIt)$("add").click();
+}
+$("saveMine").onclick=()=>saveMine(false);
+$("saveLog").onclick=()=>saveMine(true);
 $("mine").onclick=e=>{
  const i=e.target.dataset.c;if(i===undefined)return;
  S.custom.splice(+i,1);save();
@@ -232,6 +253,36 @@ function fillCsh(sel){
 }
 $("csh").onchange=()=>{$("cshn").hidden=$("csh").value!=="__new";if(!$("cshn").hidden)$("cshn").focus()};
 $("goCustom").onclick=()=>{fillCsh();$("custom").scrollIntoView({behavior:"smooth"});$("cn").focus({preventScroll:true})};
+function rp(n){return "Rp "+Math.round(n).toLocaleString("id-ID")}
+function price(){return Math.round((parseFloat($("price").value)||0)*(+$("qty").value))}
+function pkey(){return $("shop").value+"|"+cur().n}
+function fillPrice(){const d=cur(),v=S.prices[pkey()];$("price").value=v!==undefined?v:(d.p||"")}
+function rememberPrice(){const v=parseFloat($("price").value);if(!isNaN(v)&&v>=0)S.prices[pkey()]=v;else delete S.prices[pkey()]}
+const mkey=d=>d.slice(0,7);
+const allRows=()=>(S.hist||[]).concat(S.log.map(e=>Object.assign({d:S.day},e)));
+function monthName(k){const [y,m]=k.split("-");return new Date(+y,+m-1,1).toLocaleDateString("id-ID",{month:"long",year:"numeric"})}
+function renderRecap(){
+ const data=allRows(),cm=mkey(S.day);
+ const keys=[...new Set(data.map(e=>mkey(e.d)).concat([cm]))].sort().reverse();
+ const sel=$("mon"),prev=sel.value;
+ sel.innerHTML=keys.map(k=>`<option value="${k}">${monthName(k)}</option>`).join("");
+ sel.value=keys.includes(prev)?prev:cm;
+ const k=sel.value,rows=data.filter(e=>mkey(e.d)===k);
+ if(!rows.length){$("rc").innerHTML='<p class="empty">Belum ada catatan di bulan ini.</p>';return}
+ const [y,m]=k.split("-").map(Number),nd=new Date(y,m,0).getDate(),day=Array(nd).fill(0);
+ rows.forEach(e=>{day[+e.d.slice(8,10)-1]+=e.mg});
+ const sum=f=>rows.reduce((a,b)=>a+f(b),0);
+ const cups=sum(e=>e.q||1),caf=sum(e=>e.mg),sug=sum(e=>e.sg||0),cost=sum(e=>e.p||0);
+ const act=day.filter(x=>x>0).length,over=day.filter(x=>x>S.limit).length,mx=Math.max(S.limit,...day);
+ const by={};rows.forEach(e=>{const o=by[e.shop]||(by[e.shop]={c:0,p:0});o.c+=e.q||1;o.p+=e.p||0});
+ const st=(b,s)=>`<div class="st"><b>${b}</b><span>${s}</span></div>`;
+ $("rc").innerHTML=`<div class="grid">${st(cups+" gelas","Total minuman")}${st(rp(cost),"Total biaya")}${st(caf+" mg","Total kafein")}${st(sug+" g","Total gula")}${st(Math.round(caf/act)+" mg","Rata-rata kafein per hari minum")}${st(over+" hari","Melewati batas kafein")}</div>`
+ +(cost?`<p class="note" style="margin:10px 0 0">Rata-rata biaya ${rp(cost/act)} per hari minum.</p>`:`<p class="note" style="margin:10px 0 0">Isi harga saat mencatat minuman agar biaya muncul di rekap.</p>`)
+ +`<div class="ch" role="img" aria-label="Kafein per hari">${day.map((v,i)=>`<i class="${v>S.limit?"o":""}" style="height:${v?Math.max(v/mx*100,3):0}%" title="Tanggal ${i+1}: ${v} mg"></i>`).join("")}<div class="ln" style="bottom:${S.limit/mx*100}%"></div></div>`
+ +`<p class="note" style="margin:6px 0 12px">Kafein per hari (garis putus-putus: batas ${S.limit} mg, merah: melewati batas)</p>`
+ +`<ul>${Object.entries(by).sort((a,b)=>b[1].c-a[1].c).map(([n,o])=>`<li><div><b>${esc(n)}</b><span>${o.c} gelas${o.p?" · "+rp(o.p):""}</span></div></li>`).join("")}</ul>`;
+}
+$("mon").onchange=renderRecap;
 $("sugar").onchange=showInfo;$("qty").onchange=showInfo;
 $("slimit").onchange=e=>{S.slimit=+e.target.value;save();render()};
 function total(){return S.log.reduce((a,b)=>a+b.mg,0)}
@@ -267,18 +318,18 @@ function render(){
  if(t>L)a=`<div class="alert bad">Kafein hari ini ${t} mg, melewati batas ${L} mg. Hentikan kopi dulu, minum air putih, dan hindari tambahan sampai besok.</div>`;
  else if(t>=L*.75)a=`<div class="alert warn">Tinggal ${L-t} mg lagi sampai batas. Satu minuman lagi bisa membuatmu melewatinya.</div>`;
  else if(late&&t>0)a=`<div class="alert warn">Sudah lewat jam ${S.cut}. Kopi sekarang bisa mengganggu tidur malam.</div>`;
- $("alert").innerHTML=a+sugarUI();
- $("log").innerHTML=S.log.map((e,i)=>`<li><div><b>${esc(e.n)}</b><span>${esc(e.shop)} · ${e.time} · ${e.mg} mg · ${e.sg||0} g gula</span></div><button class="ghost" data-i="${i}" aria-label="Hapus ${esc(e.n)}">Hapus</button></li>`).join("");
+ $("alert").innerHTML=a+sugarUI();renderRecap();
+ $("log").innerHTML=S.log.map((e,i)=>`<li><div><b>${esc(e.n)}</b><span>${esc(e.shop)} · ${e.time} · ${e.mg} mg · ${e.sg||0} g gula${e.p?" · "+rp(e.p):""}</span></div><button class="ghost" data-i="${i}" aria-label="Hapus ${esc(e.n)}">Hapus</button></li>`).join("");
  $("empty").style.display=S.log.length?"none":"block";
 }
 $("shop").onchange=()=>{fillDrinks();$("csh").value=$("shop").value;$("cshn").hidden=true};
-$("drink").onchange=showInfo;
+$("drink").onchange=()=>{showInfo();fillPrice()};
 $("size").onchange=showInfo;
 $("add").onclick=()=>{
  askPerm();
  const d=cur(),before=total();
- S.log.push({shop:$("shop").value,n:d.n+(+$("qty").value>1?" ×"+$("qty").value:""),mg:mg(),sg:sg(),time:new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})});
- save();render();
+ S.log.push({d:S.day,q:+$("qty").value,p:price(),shop:$("shop").value,n:d.n+(+$("qty").value>1?" ×"+$("qty").value:""),mg:mg(),sg:sg(),time:new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})});
+ rememberPrice();save();render();
  const t=total();
  if(t>S.limit&&before<=S.limit)notify(`Kafein hari ini ${t} mg, melewati batas ${S.limit} mg.`);
  else if(t>=S.limit*.75&&before<S.limit*.75)notify(`Kafein hari ini ${t} mg, hampir mencapai batas.`);
